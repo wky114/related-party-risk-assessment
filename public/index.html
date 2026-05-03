@@ -1,0 +1,458 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI关联交易风险评估平台</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f5f7fa; }
+
+    .header {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      padding: 20px;
+      text-align: center;
+    }
+    .header h1 { font-size: 24px; margin-bottom: 8px; }
+    .header p { opacity: 0.9; font-size: 14px; }
+
+    .container { max-width: 1200px; margin: 0 auto; padding: 20px; }
+
+    .card {
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+      padding: 24px;
+      margin-bottom: 20px;
+    }
+    .card h2 { font-size: 18px; color: #333; margin-bottom: 16px; }
+
+    .form-group { margin-bottom: 16px; }
+    .form-group label { display: block; margin-bottom: 8px; font-weight: 500; color: #555; }
+    .form-group input, .form-group select {
+      width: 100%;
+      padding: 12px;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      font-size: 14px;
+    }
+    .form-group input:focus, .form-group select:focus {
+      outline: none;
+      border-color: #667eea;
+      box-shadow: 0 0 0 3px rgba(102,126,234,0.1);
+    }
+
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+
+    .checkbox-group { display: flex; gap: 16px; flex-wrap: wrap; }
+    .checkbox-group label { display: flex; align-items: center; gap: 6px; cursor: pointer; }
+
+    .btn {
+      padding: 12px 24px;
+      border: none;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .btn-primary {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+    }
+    .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(102,126,234,0.4); }
+    .btn-primary:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+
+    .result-section { margin-top: 20px; }
+
+    .risk-badge {
+      display: inline-block;
+      padding: 6px 16px;
+      border-radius: 20px;
+      font-weight: 500;
+      font-size: 14px;
+    }
+    .risk-low { background: #e6f7e6; color: #52c41a; }
+    .risk-medium { background: #fff7e6; color: #faad14; }
+    .risk-high { background: #fff2e8; color: #fa541c; }
+    .risk-extreme { background: #fff1f0; color: #f5222d; }
+
+    .report-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 16px;
+      margin-top: 16px;
+    }
+
+    .report-item {
+      background: #fafafa;
+      border-radius: 8px;
+      padding: 16px;
+      border-left: 4px solid #667eea;
+    }
+    .report-item h3 { font-size: 14px; color: #667eea; margin-bottom: 8px; }
+    .report-item p { font-size: 13px; color: #666; line-height: 1.6; }
+
+    .score-bar {
+      height: 8px;
+      background: #eee;
+      border-radius: 4px;
+      margin-top: 8px;
+      overflow: hidden;
+    }
+    .score-fill {
+      height: 100%;
+      border-radius: 4px;
+      transition: width 0.5s;
+    }
+
+    .loading {
+      display: none;
+      text-align: center;
+      padding: 40px;
+    }
+    .loading.active { display: block; }
+    .spinner {
+      width: 40px;
+      height: 40px;
+      border: 4px solid #f3f3f3;
+      border-top: 4px solid #667eea;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin: 0 auto 16px;
+    }
+    @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+    .conclusion {
+      background: linear-gradient(135deg, #667eea20 0%, #764ba220 100%);
+      border-radius: 8px;
+      padding: 16px;
+      margin-top: 16px;
+      border-left: 4px solid #667eea;
+    }
+    .conclusion h3 { color: #667eea; margin-bottom: 8px; }
+
+    .error-msg {
+      background: #fff1f0;
+      border: 1px solid #ffa39e;
+      border-radius: 8px;
+      padding: 16px;
+      color: #f5222d;
+      margin-top: 16px;
+    }
+
+    .datasource-tag {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-size: 12px;
+      margin-right: 4px;
+    }
+    .tag-tianyancha { background: #e6f7ff; color: #1890ff; }
+    .tag-qichacha { background: #f6ffed; color: #52c41a; }
+    .tag-yuandian { background: #fff7e6; color: #fa8c16; }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>AI关联交易风险评估平台</h1>
+    <p>基于Claude AI + 天眼查 + 企查查 + 元典 | 多源数据融合分析</p>
+  </div>
+
+  <div class="container">
+    <!-- 输入表单 -->
+    <div class="card">
+      <h2>交易信息录入</h2>
+      <form id="analysisForm">
+        <div class="form-row">
+          <div class="form-group">
+            <label>交易对方公司名称</label>
+            <input type="text" id="companyName" placeholder="请输入公司全称" required>
+          </div>
+          <div class="form-group">
+            <label>交易金额 (万元)</label>
+            <input type="number" id="amount" placeholder="请输入金额" required>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>交易类型</label>
+            <select id="transactionType">
+              <option value="采购">采购</option>
+              <option value="销售">销售</option>
+              <option value="借款">借款</option>
+              <option value="租赁">租赁</option>
+              <option value="担保">担保</option>
+              <option value="其他">其他</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>我方主体</label>
+            <input type="text" id="ourEntity" value="北京三元食品股份有限公司">
+          </div>
+        </div>
+        <div class="form-group">
+          <label>数据源选择</label>
+          <div class="checkbox-group">
+            <label><input type="checkbox" id="useTianyancha" checked> <span class="datasource-tag tag-tianyancha">天眼查</span></label>
+            <label><input type="checkbox" id="useQichacha" checked> <span class="datasource-tag tag-qichacha">企查查</span></label>
+            <label><input type="checkbox" id="useYuandian" checked> <span class="datasource-tag tag-yuandian">元典</span></label>
+          </div>
+        </div>
+        <button type="submit" class="btn btn-primary" id="submitBtn">开始AI风险评估</button>
+      </form>
+    </div>
+
+    <!-- 加载状态 -->
+    <div class="loading" id="loading">
+      <div class="spinner"></div>
+      <p>AI正在进行风险评估分析...</p>
+    </div>
+
+    <!-- 评估结果 -->
+    <div class="card result-section" id="resultSection" style="display:none;">
+      <h2>风险评估报告</h2>
+
+      <!-- 风险等级 -->
+      <div id="riskLevelSection"></div>
+
+      <!-- 各维度分析 -->
+      <div class="report-grid" id="reportGrid"></div>
+
+      <!-- 合规建议 -->
+      <div id="recommendationsSection"></div>
+
+      <!-- 综合结论 -->
+      <div class="conclusion" id="conclusionSection"></div>
+    </div>
+
+    <!-- 错误信息 -->
+    <div class="error-msg" id="errorSection" style="display:none;"></div>
+  </div>
+
+  <script>
+    const API_BASE = '';
+
+    document.getElementById('analysisForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      const submitBtn = document.getElementById('submitBtn');
+      const loading = document.getElementById('loading');
+      const resultSection = document.getElementById('resultSection');
+      const errorSection = document.getElementById('errorSection');
+
+      // 收集表单数据
+      const dataSources = [];
+      if (document.getElementById('useTianyancha').checked) dataSources.push('tianyancha');
+      if (document.getElementById('useQichacha').checked) dataSources.push('qichacha');
+      if (document.getElementById('useYuandian').checked) dataSources.push('yuandian');
+
+      const formData = {
+        companyName: document.getElementById('companyName').value,
+        amount: Number(document.getElementById('amount').value),
+        transactionType: document.getElementById('transactionType').value,
+        ourEntity: document.getElementById('ourEntity').value,
+        dataSources
+      };
+
+      // UI状态更新
+      submitBtn.disabled = true;
+      submitBtn.textContent = '分析中...';
+      loading.classList.add('active');
+      resultSection.style.display = 'none';
+      errorSection.style.display = 'none';
+
+      try {
+        const response = await fetch(`${API_BASE}/api/risk-assessment`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(formData)
+        });
+
+        const data = await response.json();
+
+        if (data.code === 200) {
+          renderReport(data.data);
+          resultSection.style.display = 'block';
+        } else {
+          showError(data.message || '分析失败');
+        }
+      } catch (error) {
+        showError('请求失败: ' + error.message);
+      } finally {
+        submitBtn.disabled = false;
+        submitBtn.textContent = '开始AI风险评估';
+        loading.classList.remove('active');
+      }
+    });
+
+    function renderReport(data) {
+      const report = data.riskReport;
+
+      // 风险等级 - 突出显示
+      const riskLevel = report.riskLevel || {};
+      const levelClass = getRiskClass(riskLevel.level);
+      const mainRisks = riskLevel.mainRisks || [];
+      document.getElementById('riskLevelSection').innerHTML = `
+        <div style="background:linear-gradient(135deg, ${getScoreColor(riskLevel.score)}15 0%, ${getScoreColor(riskLevel.score)}05 100%); border-radius:12px; padding:24px; margin:20px 0; border:1px solid ${getScoreColor(riskLevel.score)}30;">
+          <div style="text-align:center;">
+            <div style="font-size:14px; color:#666; margin-bottom:8px;">风险等级</div>
+            <span class="risk-badge ${levelClass}" style="font-size:18px; padding:8px 24px;">${riskLevel.level || '未知'}</span>
+            <div class="score-bar" style="width:200px; margin:16px auto; height:12px;">
+              <div class="score-fill" style="width:${riskLevel.score || 0}%; background:${getScoreColor(riskLevel.score)}"></div>
+            </div>
+            <div style="font-size:24px; font-weight:bold; color:${getScoreColor(riskLevel.score)};">${riskLevel.score || 0}<span style="font-size:14px; color:#999;">/100</span></div>
+          </div>
+          ${mainRisks.length > 0 ? `
+            <div style="margin-top:16px; padding-top:16px; border-top:1px solid #eee;">
+              <div style="font-size:13px; color:#666; margin-bottom:8px;">⚠️ 主要风险点：</div>
+              <ul style="margin:0; padding-left:20px; font-size:13px; color:#333;">
+                ${mainRisks.map(r => `<li style="margin:4px 0;">${r}</li>`).join('')}
+              </ul>
+            </div>
+          ` : ''}
+        </div>
+      `;
+
+      // 各维度分析
+      const grid = document.getElementById('reportGrid');
+      grid.innerHTML = '';
+
+      const sections = [
+        { title: '关联关系认定', icon: '🔗', content: report.relationIdentification, color: '#667eea' },
+        { title: '合规性分析', icon: '📋', content: report.complianceAnalysis, color: '#52c41a' },
+        { title: '交易公允性', icon: '⚖️', content: report.fairnessAnalysis, color: '#faad14' },
+        { title: '法律风险分析', icon: '⚠️', content: report.legalRisk, color: '#f5222d' },
+        { title: '数据源交叉验证', icon: '🔍', content: report.crossValidation, color: '#722ed1' }
+      ];
+
+      sections.forEach(section => {
+        if (section.content) {
+          grid.innerHTML += `
+            <div class="report-item" style="border-left-color:${section.color};">
+              <h3>${section.icon} ${section.title}</h3>
+              <div style="margin-top:8px;">${formatContent(section.content)}</div>
+            </div>
+          `;
+        }
+      });
+
+      // 显示使用的数据源
+      if (data.dataSourcesUsed) {
+        const tags = data.dataSourcesUsed.map(ds => {
+          const tagClass = ds === 'tianyancha' ? 'tag-tianyancha' : ds === 'qichacha' ? 'tag-qichacha' : 'tag-yuandian';
+          const label = ds === 'tianyancha' ? '天眼查' : ds === 'qichacha' ? '企查查' : '元典';
+          return `<span class="datasource-tag ${tagClass}">${label}</span>`;
+        }).join(' ');
+
+        grid.innerHTML += `
+          <div class="report-item" style="border-left-color:#722ed1;">
+            <h3>📡 数据来源</h3>
+            <p style="margin-top:8px;">${tags}</p>
+          </div>
+        `;
+      }
+
+      // 合规建议
+      const recommendations = report.recommendations || [];
+      if (recommendations.length > 0) {
+        document.getElementById('recommendationsSection').innerHTML = `
+          <div class="report-item" style="margin-top:16px; border-left-color:#52c41a; background:#f6ffed;">
+            <h3>✅ 合规建议</h3>
+            <ul style="margin:8px 0; padding-left:20px; list-style:none;">
+              ${recommendations.map((r, i) => `
+                <li style="margin:8px 0; padding:8px 12px; background:white; border-radius:6px; border-left:3px solid #52c41a; font-size:14px;">
+                  <span style="color:#52c41a; font-weight:500;">${i+1}.</span> ${r}
+                </li>
+              `).join('')}
+            </ul>
+          </div>
+        `;
+      }
+
+      // 综合结论 - 突出显示
+      const conclusion = report.conclusion || {};
+      document.getElementById('conclusionSection').innerHTML = `
+        <h3 style="margin-bottom:16px;">📊 综合结论</h3>
+        <div style="background:white; border-radius:8px; padding:16px; border:1px solid #667eea30;">
+          <p style="font-size:15px; line-height:1.8; color:#333; margin:0;">${typeof conclusion === 'string' ? conclusion : (conclusion.summary || '暂无结论')}</p>
+          ${conclusion.keyRisks ? `
+            <div style="margin-top:12px; padding-top:12px; border-top:1px solid #eee;">
+              <div style="font-size:13px; color:#f5222d; font-weight:500;">⚠️ 关键风险提示</div>
+              <p style="margin:8px 0 0 0; font-size:14px; color:#666;">${conclusion.keyRisks}</p>
+            </div>
+          ` : ''}
+        </div>
+      `;
+    }
+
+    function getRiskClass(level) {
+      const map = { '低': 'risk-low', '中': 'risk-medium', '高': 'risk-high', '极高': 'risk-extreme' };
+      return map[level] || 'risk-medium';
+    }
+
+    function getScoreColor(score) {
+      if (score < 30) return '#52c41a';
+      if (score < 60) return '#faad14';
+      if (score < 80) return '#fa541c';
+      return '#f5222d';
+    }
+
+    // 字段名中文映射
+    const fieldLabels = {
+      'isRelated': '是否构成关联关系',
+      'relationType': '关联关系类型',
+      'basis': '认定依据',
+      'ruleReference': '引用规则',
+      'requiresApproval': '是否需要审议',
+      'requiresDisclosure': '是否需要披露',
+      'details': '详细说明',
+      'level': '风险等级',
+      'score': '风险评分',
+      'mainRisks': '主要风险点',
+      'isFair': '定价是否公允',
+      'riskOfBenefitTransfer': '利益输送风险',
+      'suggestions': '建议',
+      'litigationCount': '涉诉案件数',
+      'executionCount': '被执行案件数',
+      'dishonestyCount': '失信记录数',
+      'summary': '概述',
+      'isConsistent': '数据是否一致',
+      'differences': '数据差异',
+      'reliability': '数据可信度',
+      'status': '状态'
+    };
+
+    // 布尔值转换
+    function formatValue(value) {
+      if (value === true) return '✅ 是';
+      if (value === false) return '❌ 否';
+      if (Array.isArray(value)) {
+        return value.length > 0 ? value.join('、') : '无';
+      }
+      return value;
+    }
+
+    function formatContent(content, parentKey = '') {
+      if (typeof content === 'string') return content;
+      if (typeof content === 'boolean') return formatValue(content);
+      if (typeof content === 'number') return content;
+
+      return Object.entries(content)
+        .map(([key, value]) => {
+          const label = fieldLabels[key] || key;
+          const formattedValue = formatValue(value);
+          return `<div style="margin-bottom:8px;"><span style="color:#666; font-size:13px;">${label}：</span><span style="color:#333;">${formattedValue}</span></div>`;
+        })
+        .join('');
+    }
+
+    function showError(message) {
+      const errorSection = document.getElementById('errorSection');
+      errorSection.textContent = message;
+      errorSection.style.display = 'block';
+    }
+  </script>
+</body>
+</html>

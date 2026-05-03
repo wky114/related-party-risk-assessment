@@ -1,0 +1,82 @@
+{
+  "listingCompany": {
+    "name": "北京三元食品股份有限公司",
+    "shortName": "三元食品",
+    "stockCode": "600429",
+    "exchange": "上海证券交易所",
+    "companyId": "14129377"
+  },
+  "strategy": {
+    "mode": "sanyuan-specialized",
+    "baselineCacheHours": 24,
+    "forceRefreshListingGraph": true,
+    "baselineControllers": [
+      {
+        "name": "北京首农食品集团有限公司",
+        "reason": "三元食品专项基准控制主体（根据上市公司公开披露口径维护）",
+        "strength": "strong",
+        "source": "listing_disclosure"
+      }
+    ],
+    "disclosedControlChains": [
+      {
+        "companyName": "北京月盛斋清真食品有限公司",
+        "reason": "二商肉食集团官网信息公开显示月盛斋股东为北京二商肉类食品集团有限公司，且其上级单位为二商肉食集团、隶属于北京首农食品集团有限公司。",
+        "source": "official_group_disclosure",
+        "sourceUrl": "https://www.esdhm.net/newsInfo_566.html",
+        "chain": [
+          {
+            "name": "北京月盛斋清真食品有限公司",
+            "creditCode": "91110106753304500P"
+          },
+          {
+            "name": "北京二商肉类食品集团有限公司",
+            "companyId": "3401292926",
+            "ratio": "100%",
+            "control": true,
+            "controlBasis": "公开信息披露：股东持股100%"
+          },
+          {
+            "name": "北京首农食品集团有限公司",
+            "companyId": "3188274175",
+            "ratio": "100%",
+            "control": true,
+            "controlBasis": "公开信息披露：隶属于北京首农食品集团有限公司"
+          }
+        ]
+      },
+      {
+        "companyName": "海南京粮控股股份有限公司",
+        "companyId": "3162833796",
+        "aliases": [
+          "京粮控股"
+        ],
+        "reason": "京粮控股年报披露其控股股东为北京粮食集团有限责任公司；北京粮食集团为首农食品集团下属控制主体。",
+        "source": "annual_report_disclosure",
+        "sourceUrl": "https://static.cninfo.com.cn/finalpage/2025-03-29/1222943403.PDF",
+        "chain": [
+          {
+            "name": "海南京粮控股股份有限公司",
+            "companyId": "3162833796"
+          },
+          {
+            "name": "北京粮食集团有限责任公司",
+            "companyId": "368793",
+            "ratio": "39.68%",
+            "control": true,
+            "controlBasis": "上市公司年报披露：控股股东"
+          },
+          {
+            "name": "北京首农食品集团有限公司",
+            "companyId": "3188274175",
+            "ratio": "100%",
+            "control": true,
+            "controlBasis": "三元食品专项基准控制主体下的公开披露控制链"
+          }
+        ]
+      }
+    ]
+  },
+  "companies": [],
+  "persons": []
+}

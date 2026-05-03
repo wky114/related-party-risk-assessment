@@ -1,0 +1,33 @@
+{
+  "name": "related-party-risk-assessment",
+  "version": "2.0.0",
+  "description": "AI驱动的上市公司关联交易风险评估平台 - 集成天眼查+企查查+元典",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "nodemon server.js"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.24.0",
+    "@modelcontextprotocol/sdk": "^1.29.0",
+    "axios": "^1.6.2",
+    "cors": "^2.8.5",
+    "dotenv": "^16.3.1",
+    "express": "^4.18.2"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.2"
+  },
+  "keywords": [
+    "关联交易",
+    "风险评估",
+    "AI",
+    "Claude",
+    "合规",
+    "天眼查",
+    "企查查",
+    "元典"
+  ],
+  "author": "",
+  "license": "MIT"
+}
